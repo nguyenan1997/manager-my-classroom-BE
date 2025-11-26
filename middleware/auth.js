@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, Parent } = require('../models');
 
 const authenticate = async (req, res, next) => {
   try {
@@ -14,19 +14,43 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Verify user still exists
-    const user = await User.findByPk(decoded.userId, {
-      attributes: ['id', 'email', 'role']
-    });
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
+    // Check if it's a parent or user
+    if (decoded.role === 'parent') {
+      // Verify parent still exists
+      const parent = await Parent.findByPk(decoded.userId, {
+        attributes: ['id', 'name', 'email', 'phone']
       });
+
+      if (!parent) {
+        return res.status(401).json({
+          success: false,
+          message: 'Parent account not found'
+        });
+      }
+
+      req.user = {
+        id: parent.id,
+        parentId: parent.id,
+        email: parent.email,
+        name: parent.name,
+        role: 'parent'
+      };
+    } else {
+      // Verify user (admin/staff) still exists
+      const user = await User.findByPk(decoded.userId, {
+        attributes: ['id', 'email', 'role']
+      });
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      req.user = user.toJSON();
     }
 
-    req.user = user.toJSON();
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

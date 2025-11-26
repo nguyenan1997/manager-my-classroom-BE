@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const studentController = require('../controllers/studentController');
+const { authenticate, authorize } = require('../middleware/auth');
 
 // Validation rules
 const studentValidation = [
@@ -119,6 +120,57 @@ router.post('/', studentValidation, studentController.createStudent);
  *       404:
  *         description: Student not found
  */
-router.get('/:id', studentController.getStudentById);
+/**
+ * @swagger
+ * /api/students/my-children:
+ *   get:
+ *     summary: Get all children for logged-in parent (Parent only)
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of children retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                       dob:
+ *                         type: string
+ *                         format: date
+ *                       gender:
+ *                         type: string
+ *                       current_grade:
+ *                         type: string
+ *                       parent_id:
+ *                         type: string
+ *                         format: uuid
+ *                       parent:
+ *                         $ref: '#/components/schemas/Parent'
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       403:
+ *         description: Forbidden - Not a parent account
+ */
+router.get('/my-children', authenticate, authorize('parent'), studentController.getMyStudents);
+
+router.get('/:id', authenticate, studentController.getStudentById);
 
 module.exports = router;

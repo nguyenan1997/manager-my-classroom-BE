@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const classController = require('../controllers/classController');
+const { authenticate, authorize } = require('../middleware/auth');
 
 // Validation rules
 const classValidation = [
@@ -17,8 +18,10 @@ const registrationValidation = [
  * @swagger
  * /api/classes:
  *   post:
- *     summary: Create a new class
+ *     summary: Create a new class (Admin/Staff only)
  *     tags: [Classes]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -66,7 +69,7 @@ const registrationValidation = [
  *       400:
  *         description: Validation error
  */
-router.post('/', classValidation, classController.createClass);
+router.post('/', authenticate, authorize('admin', 'staff'), classValidation, classController.createClass);
 
 /**
  * @swagger

@@ -7,15 +7,46 @@ const { authenticate, authorize } = require('../middleware/auth');
 // Validation rules
 const parentValidation = [
   body('name').notEmpty().withMessage('Name is required'),
-  body('email').optional().isEmail().withMessage('Invalid email format'),
+  body('email').isEmail().withMessage('Valid email is required for parent login'),
   body('phone').optional().isMobilePhone().withMessage('Invalid phone number')
 ];
 
 /**
  * @swagger
  * /api/parents:
+ *   get:
+ *     summary: Get all parents (Admin/Staff only)
+ *     description: |
+ *       - Admin: Can see all parents
+ *       - Staff: Can only see parents they created
+ *     tags: [Parents]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of parents retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Parent'
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       403:
+ *         description: Forbidden - Insufficient permissions (not admin/staff)
  *   post:
  *     summary: Create a new parent (Admin/Staff only)
+ *     description: The parent will be assigned to the authenticated staff/admin who creates it
  *     tags: [Parents]
  *     security:
  *       - bearerAuth: []
@@ -65,14 +96,20 @@ const parentValidation = [
  *       403:
  *         description: Forbidden - Insufficient permissions (not admin/staff)
  */
+router.get('/', authenticate, authorize('admin', 'staff'), parentController.getAllParents);
 router.post('/', authenticate, authorize('admin', 'staff'), parentValidation, parentController.createParent);
 
 /**
  * @swagger
  * /api/parents/{id}:
  *   get:
- *     summary: Get parent by ID
+ *     summary: Get parent by ID (Admin/Staff only)
+ *     description: |
+ *       - Admin: Can view any parent
+ *       - Staff: Can only view parents they created
  *     tags: [Parents]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -95,13 +132,72 @@ router.post('/', authenticate, authorize('admin', 'staff'), parentValidation, pa
  *                   example: true
  *                 data:
  *                   $ref: '#/components/schemas/Parent'
+ *       403:
+ *         description: Forbidden - Staff can only view parents they created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Parent not found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
  */
-router.get('/:id', parentController.getParentById);
+/**
+ * @swagger
+ * /api/parents/my-children:
+ *   get:
+ *     summary: Get all children for logged-in parent (Parent only)
+ *     tags: [Parents]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of children retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                       dob:
+ *                         type: string
+ *                         format: date
+ *                       gender:
+ *                         type: string
+ *                       current_grade:
+ *                         type: string
+ *                       parent_id:
+ *                         type: string
+ *                         format: uuid
+ *                       parent:
+ *                         $ref: '#/components/schemas/Parent'
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       403:
+ *         description: Forbidden - Not a parent account
+ */
+router.get('/my-children', authenticate, authorize('parent'), parentController.getMyChildren);
+
+router.get('/:id', authenticate, authorize('admin', 'staff'), parentController.getParentById);
 
 module.exports = router;

@@ -7,6 +7,9 @@ const Subscription = require('./Subscription');
 const ClassRegistration = require('./ClassRegistration');
 
 // Define associations
+User.hasMany(Parent, { foreignKey: 'created_by', onDelete: 'RESTRICT' });
+Parent.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+
 Parent.hasMany(Student, { foreignKey: 'parent_id', onDelete: 'CASCADE' });
 Student.belongsTo(Parent, { foreignKey: 'parent_id' });
 

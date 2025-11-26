@@ -35,12 +35,14 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const parentRoutes = require('./routes/parentRoutes');
 const classRoutes = require('./routes/classRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/parents', parentRoutes);
 app.use('/api/classes', classRoutes);

@@ -44,6 +44,17 @@ const options = {
             name: { type: 'string', example: 'Nguyễn Văn A' },
             phone: { type: 'string', example: '0123456789' },
             email: { type: 'string', format: 'email', example: 'parent@example.com' },
+            password_hash: { type: 'string', description: 'Hashed password (not returned in API responses)' },
+            created_by: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000', description: 'ID of the staff/admin who created this parent' },
+            creator: {
+              type: 'object',
+              description: 'Information about the staff/admin who created this parent',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                email: { type: 'string', format: 'email' },
+                role: { type: 'string', enum: ['admin', 'staff'] }
+              }
+            },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' }
           }

@@ -51,6 +51,7 @@ const createStudent = async (req, res) => {
 const getStudentById = async (req, res) => {
   try {
     const { id } = req.params;
+    const { role, parentId } = req.user || {};
 
     const student = await Student.findByPk(id, {
       include: [{
@@ -63,6 +64,14 @@ const getStudentById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Student not found'
+      });
+    }
+
+    // Permission check: parent can only view their own children
+    if (role === 'parent' && student.parent_id !== parentId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view your own children.'
       });
     }
 
@@ -84,7 +93,51 @@ const getStudentById = async (req, res) => {
   }
 };
 
+// Get all students for a parent (parent can only see their own children)
+const getMyStudents = async (req, res) => {
+  try {
+    const { role, parentId } = req.user;
+
+    if (role !== 'parent') {
+      return res.status(403).json({
+        success: false,
+        message: 'This endpoint is only for parents'
+      });
+    }
+
+    const students = await Student.findAll({
+      where: { parent_id: parentId },
+      include: [{
+        model: Parent,
+        attributes: ['id', 'name', 'phone', 'email']
+      }],
+      order: [['created_at', 'DESC']]
+    });
+
+    const studentsData = students.map(student => {
+      const data = student.toJSON();
+      data.parent = data.Parent;
+      delete data.Parent;
+      return data;
+    });
+
+    res.json({
+      success: true,
+      count: studentsData.length,
+      data: studentsData
+    });
+  } catch (error) {
+    console.error('Get my students error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createStudent,
-  getStudentById
+  getStudentById,
+  getMyStudents
 };
