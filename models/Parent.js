@@ -3,9 +3,9 @@ const sequelize = require('../config/database');
 
 const Parent = sequelize.define('Parent', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     primaryKey: true,
-    autoIncrement: true
+    defaultValue: DataTypes.UUIDV4
   },
   name: {
     type: DataTypes.STRING(255),

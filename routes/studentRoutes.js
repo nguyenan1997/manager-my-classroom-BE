@@ -6,7 +6,7 @@ const studentController = require('../controllers/studentController');
 // Validation rules
 const studentValidation = [
   body('name').notEmpty().withMessage('Name is required'),
-  body('parent_id').isInt().withMessage('Parent ID is required and must be an integer'),
+  body('parent_id').isUUID().withMessage('Parent ID is required and must be a valid UUID'),
   body('dob').optional().isISO8601().withMessage('Invalid date format'),
   body('gender').optional().isIn(['male', 'female', 'other']).withMessage('Invalid gender')
 ];
@@ -31,8 +31,9 @@ const studentValidation = [
  *                 type: string
  *                 example: Nguyễn Văn B
  *               parent_id:
- *                 type: integer
- *                 example: 1
+ *                 type: string
+ *                 format: uuid
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *               dob:
  *                 type: string
  *                 format: date
@@ -78,9 +79,10 @@ router.post('/', studentValidation, studentController.createStudent);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Student ID
- *         example: 1
+ *         example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
  *         description: Student retrieved successfully
@@ -96,8 +98,9 @@ router.post('/', studentValidation, studentController.createStudent);
  *                   type: object
  *                   properties:
  *                     id:
- *                       type: integer
- *                       example: 1
+ *                       type: string
+ *                       format: uuid
+ *                       example: "550e8400-e29b-41d4-a716-446655440000"
  *                     name:
  *                       type: string
  *                       example: Nguyễn Văn B
@@ -109,7 +112,8 @@ router.post('/', studentValidation, studentController.createStudent);
  *                     current_grade:
  *                       type: string
  *                     parent_id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *                     parent:
  *                       $ref: '#/components/schemas/Parent'
  *       404:

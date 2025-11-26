@@ -31,7 +31,7 @@ const options = {
         User: {
           type: 'object',
           properties: {
-            id: { type: 'integer', example: 1 },
+            id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
             email: { type: 'string', format: 'email', example: 'admin@example.com' },
             role: { type: 'string', enum: ['admin', 'staff'], example: 'admin' },
             created_at: { type: 'string', format: 'date-time' }
@@ -40,7 +40,7 @@ const options = {
         Parent: {
           type: 'object',
           properties: {
-            id: { type: 'integer', example: 1 },
+            id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
             name: { type: 'string', example: 'Nguyễn Văn A' },
             phone: { type: 'string', example: '0123456789' },
             email: { type: 'string', format: 'email', example: 'parent@example.com' },
@@ -51,8 +51,8 @@ const options = {
         Student: {
           type: 'object',
           properties: {
-            id: { type: 'integer', example: 1 },
-            parent_id: { type: 'integer', example: 1 },
+            id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
+            parent_id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
             name: { type: 'string', example: 'Nguyễn Văn B' },
             dob: { type: 'string', format: 'date', example: '2010-05-15' },
             gender: { type: 'string', enum: ['male', 'female', 'other'], example: 'male' },
@@ -64,7 +64,7 @@ const options = {
         Class: {
           type: 'object',
           properties: {
-            id: { type: 'integer', example: 1 },
+            id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
             name: { type: 'string', example: 'Lớp Toán 5' },
             subject: { type: 'string', example: 'Toán' },
             day_of_week: { type: 'string', example: 'Monday' },
@@ -78,8 +78,8 @@ const options = {
         Subscription: {
           type: 'object',
           properties: {
-            id: { type: 'integer', example: 1 },
-            student_id: { type: 'integer', example: 1 },
+            id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
+            student_id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
             package_name: { type: 'string', example: 'Gói 20 buổi' },
             start_date: { type: 'string', format: 'date', example: '2024-01-01' },
             end_date: { type: 'string', format: 'date', example: '2024-06-30' },

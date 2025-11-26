@@ -5,7 +5,7 @@ const subscriptionController = require('../controllers/subscriptionController');
 
 // Validation rules
 const subscriptionValidation = [
-  body('student_id').isInt().withMessage('Student ID is required and must be an integer'),
+  body('student_id').isUUID().withMessage('Student ID is required and must be a valid UUID'),
   body('package_name').notEmpty().withMessage('Package name is required'),
   body('total_sessions').isInt({ min: 1 }).withMessage('Total sessions must be a positive integer'),
   body('start_date').optional().isISO8601().withMessage('Invalid date format'),
@@ -30,8 +30,9 @@ const subscriptionValidation = [
  *               - total_sessions
  *             properties:
  *               student_id:
- *                 type: integer
- *                 example: 1
+ *                 type: string
+ *                 format: uuid
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *               package_name:
  *                 type: string
  *                 example: Gói 20 buổi
@@ -140,9 +141,11 @@ router.patch('/:id/use', subscriptionController.useSession);
  *                   type: object
  *                   properties:
  *                     id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *                     student_id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *                     package_name:
  *                       type: string
  *                     total_sessions:
@@ -161,7 +164,8 @@ router.patch('/:id/use', subscriptionController.useSession);
  *                       type: object
  *                       properties:
  *                         id:
- *                           type: integer
+ *                           type: string
+ *                           format: uuid
  *                         name:
  *                           type: string
  *                         current_grade:

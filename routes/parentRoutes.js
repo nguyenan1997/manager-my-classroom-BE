@@ -78,9 +78,10 @@ router.post('/', authenticate, authorize('admin', 'staff'), parentValidation, pa
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Parent ID
- *         example: 1
+ *         example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
  *         description: Parent retrieved successfully

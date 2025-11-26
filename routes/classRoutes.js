@@ -10,7 +10,7 @@ const classValidation = [
 ];
 
 const registrationValidation = [
-  body('student_id').isInt().withMessage('Student ID is required and must be an integer')
+  body('student_id').isUUID().withMessage('Student ID is required and must be a valid UUID')
 ];
 
 /**
@@ -118,9 +118,10 @@ router.get('/', classController.getClassesByDay);
  *         name: class_id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Class ID
- *         example: 1
+ *         example: "550e8400-e29b-41d4-a716-446655440000"
  *     requestBody:
  *       required: true
  *       content:
@@ -131,8 +132,9 @@ router.get('/', classController.getClassesByDay);
  *               - student_id
  *             properties:
  *               student_id:
- *                 type: integer
- *                 example: 1
+ *                 type: string
+ *                 format: uuid
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       201:
  *         description: Student registered successfully
@@ -151,11 +153,14 @@ router.get('/', classController.getClassesByDay);
  *                   type: object
  *                   properties:
  *                     id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *                     class_id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *                     student_id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *       400:
  *         description: |
  *           Bad request - Possible reasons:

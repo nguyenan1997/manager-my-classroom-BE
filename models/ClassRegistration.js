@@ -3,12 +3,12 @@ const sequelize = require('../config/database');
 
 const ClassRegistration = sequelize.define('ClassRegistration', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     primaryKey: true,
-    autoIncrement: true
+    defaultValue: DataTypes.UUIDV4
   },
   class_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     references: {
       model: 'classes',
@@ -17,7 +17,7 @@ const ClassRegistration = sequelize.define('ClassRegistration', {
     unique: 'unique_student_class'
   },
   student_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     references: {
       model: 'students',
@@ -40,4 +40,3 @@ const ClassRegistration = sequelize.define('ClassRegistration', {
 });
 
 module.exports = ClassRegistration;
-
