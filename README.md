@@ -17,8 +17,15 @@ Backend API cho hệ thống quản lý học sinh - phụ huynh với chức n�
 ```
 BE/
 ├── config/
-│   ├── database.js          # Database connection
-│   └── db-schema.sql         # Database schema
+│   └── database.js          # Sequelize database connection
+├── models/                   # Sequelize models
+│   ├── User.js
+│   ├── Parent.js
+│   ├── Student.js
+│   ├── Class.js
+│   ├── Subscription.js
+│   ├── ClassEnrollment.js
+│   └── index.js
 ├── controllers/              # Business logic
 │   ├── authController.js
 │   ├── studentController.js
@@ -35,8 +42,7 @@ BE/
 │   └── subscriptionRoutes.js
 ├── scripts/
 │   ├── build.sh             # Build script
-│   ├── run.sh               # Run script
-│   └── init-db.sh           # Database initialization
+│   └── run.sh               # Run script
 ├── server.js                 # Entry point
 ├── package.json
 ├── Dockerfile
@@ -46,6 +52,8 @@ BE/
 
 ## Database Schema
 
+Project sử dụng **Sequelize ORM** để quản lý database. Schema được định nghĩa trong các model files trong thư mục `models/`.
+
 ### Tables:
 - **users**: Thông tin đăng nhập (email, password, role)
 - **parents**: Thông tin phụ huynh
@@ -53,6 +61,8 @@ BE/
 - **classes**: Thông tin lớp học
 - **subscriptions**: Gói học (tổng số buổi, đã dùng, còn lại)
 - **class_enrollments**: Đăng ký học sinh vào lớp
+
+Database sẽ được tự động tạo khi khởi động server lần đầu thông qua Sequelize sync.
 
 ## Cài đặt
 
@@ -83,13 +93,10 @@ DB_PASSWORD=postgres
 JWT_SECRET=your-super-secret-jwt-key
 ```
 
-4. **Tạo database và chạy schema:**
+4. **Tạo database:**
 ```bash
-# Tạo database
+# Tạo database (PostgreSQL sẽ tự động tạo tables khi server khởi động)
 createdb pv_lms
-
-# Chạy schema
-psql -U postgres -d pv_lms -f config/db-schema.sql
 ```
 
 5. **Chạy ứng dụng:**
@@ -263,7 +270,11 @@ Authorization: Bearer YOUR_JWT_TOKEN
 - `npm run dev` - Chạy development server với nodemon
 
 ### Database Migration
-Schema được định nghĩa trong `config/db-schema.sql`. Để cập nhật schema, chỉnh sửa file này và chạy lại.
+Schema được định nghĩa trong các Sequelize models trong thư mục `models/`. Database sẽ tự động được sync khi server khởi động. 
+
+**Lưu ý:** 
+- Sequelize sẽ tự động tạo tables nếu chưa tồn tại
+- Để force sync (xóa và tạo lại tables), set `force: true` trong `models/index.js` (chỉ dùng trong development)
 
 ## CI/CD
 

@@ -41,9 +41,10 @@ cp .env.example .env
 # Chỉnh sửa .env với thông tin database của bạn
 ```
 
-4. **Khởi tạo database:**
+4. **Tạo database:**
 ```bash
-psql -U postgres -d pv_lms -f config/db-schema.sql
+# Tạo database (tables sẽ được tự động tạo bởi Sequelize khi server khởi động)
+createdb pv_lms
 ```
 
 5. **Chạy ứng dụng:**
@@ -97,7 +98,8 @@ curl -X POST http://localhost:3000/api/students \
 ### Lỗi kết nối database
 - Kiểm tra PostgreSQL đang chạy: `pg_isready`
 - Kiểm tra thông tin trong file `.env`
-- Kiểm tra database đã được tạo chưa
+- Kiểm tra database đã được tạo chưa: `psql -U postgres -l | grep pv_lms`
+- Database tables sẽ được tự động tạo bởi Sequelize khi server khởi động lần đầu
 
 ### Port đã được sử dụng
 - Thay đổi PORT trong file `.env`
