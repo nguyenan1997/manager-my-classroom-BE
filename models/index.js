@@ -10,6 +10,9 @@ const ClassRegistration = require('./ClassRegistration');
 User.hasMany(Parent, { foreignKey: 'created_by', onDelete: 'RESTRICT' });
 Parent.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
+User.hasMany(Class, { foreignKey: 'created_by', onDelete: 'RESTRICT' });
+Class.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+
 Parent.hasMany(Student, { foreignKey: 'parent_id', onDelete: 'CASCADE' });
 Student.belongsTo(Parent, { foreignKey: 'parent_id' });
 

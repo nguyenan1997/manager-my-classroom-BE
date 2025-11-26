@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const classController = require('../controllers/classController');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize, optionalAuthenticate } = require('../middleware/auth');
 
 // Validation rules
 const classValidation = [
@@ -76,7 +76,13 @@ router.post('/', authenticate, authorize('admin', 'staff'), classValidation, cla
  * /api/classes:
  *   get:
  *     summary: Get list of classes, optionally filtered by day of week
+ *     description: |
+ *       - Public: Can see all classes
+ *       - Staff: Can only see classes they created
+ *       - Admin: Can see all classes
  *     tags: [Classes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: day
@@ -103,7 +109,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), classValidation, cla
  *                   items:
  *                     $ref: '#/components/schemas/Class'
  */
-router.get('/', classController.getClassesByDay);
+router.get('/', optionalAuthenticate, classController.getClassesByDay);
 
 /**
  * @swagger

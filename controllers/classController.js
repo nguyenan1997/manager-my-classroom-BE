@@ -1,4 +1,4 @@
-const { Class, ClassRegistration, Student } = require('../models');
+const { Class, ClassRegistration, Student, User } = require('../models');
 const { validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 
@@ -15,6 +15,7 @@ const createClass = async (req, res) => {
     }
 
     const { name, subject, day_of_week, time_slot, teacher_name, max_students } = req.body;
+    const { id: userId } = req.user; // Get user ID from authenticated request
 
     const classItem = await Class.create({
       name,
@@ -22,13 +23,23 @@ const createClass = async (req, res) => {
       day_of_week: day_of_week || null,
       time_slot: time_slot || null,
       teacher_name: teacher_name || null,
-      max_students: max_students || 20
+      max_students: max_students || 20,
+      created_by: userId
+    });
+
+    // Include creator info in response
+    const classWithCreator = await Class.findByPk(classItem.id, {
+      include: [{
+        model: User,
+        as: 'creator',
+        attributes: ['id', 'email', 'role']
+      }]
     });
 
     res.status(201).json({
       success: true,
       message: 'Class created successfully',
-      data: classItem.toJSON()
+      data: classWithCreator.toJSON()
     });
   } catch (error) {
     console.error('Create class error:', error);
@@ -40,7 +51,7 @@ const createClass = async (req, res) => {
   }
 };
 
-// Get classes by day of week
+// Get classes by day of week (with permission check if authenticated)
 const getClassesByDay = async (req, res) => {
   try {
     const { day } = req.query;
@@ -50,8 +61,24 @@ const getClassesByDay = async (req, res) => {
       whereCondition.day_of_week = day;
     }
 
+    // Check if user is authenticated (admin/staff)
+    const user = req.user;
+    if (user && (user.role === 'admin' || user.role === 'staff')) {
+      // Staff only sees classes they created, admin sees all
+      if (user.role === 'staff') {
+        whereCondition.created_by = user.id;
+      }
+    }
+    // If not authenticated or parent, see all classes (public view)
+
     const classes = await Class.findAll({
       where: whereCondition,
+      include: [{
+        model: User,
+        as: 'creator',
+        attributes: ['id', 'email', 'role'],
+        required: true
+      }],
       order: [['created_at', 'DESC']]
     });
 

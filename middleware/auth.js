@@ -72,6 +72,54 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+// Optional authenticate - doesn't fail if no token, just sets req.user if token is valid
+const optionalAuthenticate = async (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      // No token provided, continue without authentication
+      req.user = undefined;
+      return next();
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if it's a parent or user
+    if (decoded.role === 'parent') {
+      // Verify parent still exists
+      const parent = await Parent.findByPk(decoded.userId, {
+        attributes: ['id', 'name', 'email', 'phone']
+      });
+
+      if (parent) {
+        req.user = {
+          id: parent.id,
+          parentId: parent.id,
+          email: parent.email,
+          name: parent.name,
+          role: 'parent'
+        };
+      }
+    } else {
+      // Verify user (admin/staff) still exists
+      const user = await User.findByPk(decoded.userId, {
+        attributes: ['id', 'email', 'role']
+      });
+
+      if (user) {
+        req.user = user.toJSON();
+      }
+    }
+
+    next();
+  } catch (error) {
+    // If token is invalid, just continue without authentication
+    req.user = undefined;
+    next();
+  }
+};
+
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -92,5 +140,5 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { authenticate, authorize };
+module.exports = { authenticate, authorize, optionalAuthenticate };
 

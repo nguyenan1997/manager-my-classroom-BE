@@ -31,6 +31,14 @@ const Class = sequelize.define('Class', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 20
+  },
+  created_by: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
   tableName: 'classes',
