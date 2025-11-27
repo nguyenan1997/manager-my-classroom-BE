@@ -15,15 +15,48 @@ const createSubscription = async (req, res) => {
     }
 
     const { student_id, package_name, start_date, end_date, total_sessions } = req.body;
+    const { role, id: userId, parentId } = req.user || {};
 
     // Verify student exists
-    const student = await Student.findByPk(student_id);
+    const student = await Student.findByPk(student_id, {
+      include: [{
+        model: Parent,
+        attributes: ['id', 'name', 'email', 'created_by']
+      }]
+    });
+
     if (!student) {
       return res.status(404).json({
         success: false,
         message: 'Student not found'
       });
     }
+
+    // Permission checks
+    if (role === 'parent') {
+      // Parent can only create subscriptions for their own children
+      if (student.parent_id !== parentId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only create subscriptions for your own children.'
+        });
+      }
+    } else if (role === 'staff') {
+      // Staff can only create subscriptions for students whose parents they manage
+      if (!student.Parent || student.Parent.created_by !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only create subscriptions for students whose parents you manage.'
+        });
+      }
+    } else if (!role) {
+      // No authentication - require authentication
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required to create subscription'
+      });
+    }
+    // Admin can create for any student (no additional check needed)
 
     const subscription = await Subscription.create({
       student_id,
@@ -34,8 +67,18 @@ const createSubscription = async (req, res) => {
       used_sessions: 0
     });
 
-    const subData = subscription.toJSON();
-    subData.remaining_sessions = subscription.remaining_sessions;
+    // Fetch subscription with student info
+    const subscriptionWithStudent = await Subscription.findByPk(subscription.id, {
+      include: [{
+        model: Student,
+        attributes: ['id', 'name', 'current_grade']
+      }]
+    });
+
+    const subData = subscriptionWithStudent.toJSON();
+    subData.remaining_sessions = subscriptionWithStudent.remaining_sessions;
+    subData.student = subData.Student;
+    delete subData.Student;
 
     res.status(201).json({
       success: true,

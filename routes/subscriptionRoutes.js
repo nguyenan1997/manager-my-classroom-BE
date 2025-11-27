@@ -95,8 +95,14 @@ const subscriptionUpdateValidation = [
  *       403:
  *         description: Forbidden - Insufficient permissions
  *   post:
- *     summary: Create a new subscription package for a student
+ *     summary: Create a new subscription package for a student (Admin/Staff/Parent)
+ *     description: |
+ *       - Admin: Can create subscription for any student
+ *       - Staff: Can only create subscription for students whose parents they manage
+ *       - Parent: Can only create subscription for their own children
  *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -153,7 +159,7 @@ const subscriptionListValidation = [
 ];
 
 router.get('/', optionalAuthenticate, subscriptionListValidation, subscriptionController.getAllSubscriptions);
-router.post('/', subscriptionValidation, subscriptionController.createSubscription);
+router.post('/', authenticate, authorize('admin', 'staff', 'parent'), subscriptionValidation, subscriptionController.createSubscription);
 
 /**
  * @swagger
