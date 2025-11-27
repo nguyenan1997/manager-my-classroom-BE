@@ -1,12 +1,13 @@
 FROM node:18-alpine
 
+# Create app directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better layer caching
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy application files
 COPY . .
