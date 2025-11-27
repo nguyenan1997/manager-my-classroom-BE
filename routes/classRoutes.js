@@ -10,6 +10,11 @@ const classValidation = [
   body('max_students').optional().isInt({ min: 1 }).withMessage('Max students must be a positive integer')
 ];
 
+const classUpdateValidation = [
+  body('name').optional().notEmpty().withMessage('Class name cannot be empty'),
+  body('max_students').optional().isInt({ min: 1 }).withMessage('Max students must be a positive integer')
+];
+
 const registrationValidation = [
   body('student_id').isUUID().withMessage('Student ID is required and must be a valid UUID')
 ];
@@ -180,5 +185,86 @@ router.get('/', optionalAuthenticate, classController.getClassesByDay);
  *         description: Class or student not found
  */
 router.post('/:class_id/register', registrationValidation, classController.registerStudent);
+
+/**
+ * @swagger
+ * /api/classes/{id}:
+ *   put:
+ *     summary: Update a class (Admin/Staff only)
+ *     description: |
+ *       - Admin: Can update any class
+ *       - Staff: Can only update classes they created
+ *     tags: [Classes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Class ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Lớp Toán 5
+ *               subject:
+ *                 type: string
+ *                 example: Toán
+ *               day_of_week:
+ *                 type: string
+ *                 example: Monday
+ *               time_slot:
+ *                 type: string
+ *                 example: "18:00-19:30"
+ *               teacher_name:
+ *                 type: string
+ *                 example: Cô Lan
+ *               max_students:
+ *                 type: integer
+ *                 example: 20
+ *     responses:
+ *       200:
+ *         description: Class updated successfully
+ *       403:
+ *         description: Forbidden - Staff can only update classes they created
+ *       404:
+ *         description: Class not found
+ *   delete:
+ *     summary: Delete a class (Admin/Staff only)
+ *     description: |
+ *       - Admin: Can delete any class
+ *       - Staff: Can only delete classes they created
+ *       - Cannot delete if there are registered students
+ *     tags: [Classes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Class ID
+ *     responses:
+ *       200:
+ *         description: Class deleted successfully
+ *       400:
+ *         description: Cannot delete - has registered students
+ *       403:
+ *         description: Forbidden - Staff can only delete classes they created
+ *       404:
+ *         description: Class not found
+ */
+router.put('/:id', authenticate, authorize('admin', 'staff'), classUpdateValidation, classController.updateClass);
+router.delete('/:id', authenticate, authorize('admin', 'staff'), classController.deleteClass);
 
 module.exports = router;

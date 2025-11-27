@@ -11,6 +11,12 @@ const parentValidation = [
   body('phone').optional().isMobilePhone().withMessage('Invalid phone number')
 ];
 
+const parentUpdateValidation = [
+  body('name').optional().notEmpty().withMessage('Name cannot be empty'),
+  body('email').optional().isEmail().withMessage('Valid email is required'),
+  body('phone').optional().isMobilePhone().withMessage('Invalid phone number')
+];
+
 /**
  * @swagger
  * /api/parents:
@@ -198,6 +204,77 @@ router.post('/', authenticate, authorize('admin', 'staff'), parentValidation, pa
  */
 router.get('/my-children', authenticate, authorize('parent'), parentController.getMyChildren);
 
+/**
+ * @swagger
+ * /api/parents/{id}:
+ *   put:
+ *     summary: Update a parent (Admin/Staff only)
+ *     description: |
+ *       - Admin: Can update any parent
+ *       - Staff: Can only update parents they created
+ *     tags: [Parents]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Parent ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Parent updated successfully
+ *       400:
+ *         description: Validation error or email already exists
+ *       403:
+ *         description: Forbidden - Staff can only update parents they created
+ *       404:
+ *         description: Parent not found
+ *   delete:
+ *     summary: Delete a parent (Admin/Staff only)
+ *     description: |
+ *       - Admin: Can delete any parent
+ *       - Staff: Can only delete parents they created
+ *       - Cannot delete if parent has students
+ *     tags: [Parents]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Parent ID
+ *     responses:
+ *       200:
+ *         description: Parent deleted successfully
+ *       400:
+ *         description: Cannot delete - has students
+ *       403:
+ *         description: Forbidden - Staff can only delete parents they created
+ *       404:
+ *         description: Parent not found
+ */
 router.get('/:id', authenticate, authorize('admin', 'staff'), parentController.getParentById);
+router.put('/:id', authenticate, authorize('admin', 'staff'), parentUpdateValidation, parentController.updateParent);
+router.delete('/:id', authenticate, authorize('admin', 'staff'), parentController.deleteParent);
 
 module.exports = router;

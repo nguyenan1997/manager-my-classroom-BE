@@ -12,6 +12,14 @@ const subscriptionValidation = [
   body('end_date').optional().isISO8601().withMessage('Invalid date format')
 ];
 
+const subscriptionUpdateValidation = [
+  body('package_name').optional().notEmpty().withMessage('Package name cannot be empty'),
+  body('total_sessions').optional().isInt({ min: 1 }).withMessage('Total sessions must be a positive integer'),
+  body('used_sessions').optional().isInt({ min: 0 }).withMessage('Used sessions must be a non-negative integer'),
+  body('start_date').optional().isISO8601().withMessage('Invalid date format'),
+  body('end_date').optional().isISO8601().withMessage('Invalid date format')
+];
+
 /**
  * @swagger
  * /api/subscriptions:
@@ -173,6 +181,66 @@ router.patch('/:id/use', subscriptionController.useSession);
  *       404:
  *         description: Subscription not found
  */
+/**
+ * @swagger
+ * /api/subscriptions/{id}:
+ *   put:
+ *     summary: Update a subscription
+ *     description: Update subscription details. Used sessions cannot exceed total sessions.
+ *     tags: [Subscriptions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Subscription ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               package_name:
+ *                 type: string
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *               total_sessions:
+ *                 type: integer
+ *               used_sessions:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Subscription updated successfully
+ *       400:
+ *         description: Validation error or used_sessions exceeds total_sessions
+ *       404:
+ *         description: Subscription not found
+ *   delete:
+ *     summary: Delete a subscription
+ *     tags: [Subscriptions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Subscription ID
+ *     responses:
+ *       200:
+ *         description: Subscription deleted successfully
+ *       404:
+ *         description: Subscription not found
+ */
 router.get('/:id', subscriptionController.getSubscriptionById);
+router.put('/:id', subscriptionUpdateValidation, subscriptionController.updateSubscription);
+router.delete('/:id', subscriptionController.deleteSubscription);
 
 module.exports = router;
