@@ -3,9 +3,10 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: pv-lms-postgres
+    container_name: pv-technical-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: pv_lms
+      POSTGRES_DB: manager_class
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -20,7 +21,8 @@ services:
 
   backend:
     build: .
-    container_name: pv-lms-backend
+    container_name: pv-technical-backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -28,7 +30,7 @@ services:
       PORT: 3000
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: pv_lms
+      DB_NAME: manager_class
       DB_USER: postgres
       DB_PASSWORD: postgres
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
@@ -36,11 +38,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./:/app
-      - /app/node_modules
-    command: npm start
 
 volumes:
   postgres_data:
-
