@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 const subscriptionController = require('../controllers/subscriptionController');
+const { authenticate, authorize, optionalAuthenticate } = require('../middleware/auth');
 
 // Validation rules
 const subscriptionValidation = [
@@ -23,6 +24,76 @@ const subscriptionUpdateValidation = [
 /**
  * @swagger
  * /api/subscriptions:
+ *   get:
+ *     summary: Get all subscriptions (Admin/Staff/Parent)
+ *     description: |
+ *       - Admin: Can see all subscriptions
+ *       - Staff: Can only see subscriptions for students whose parents they manage
+ *       - Parent: Can only see subscriptions for their own children
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: student_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter subscriptions by student ID
+ *         example: "550e8400-e29b-41d4-a716-446655440000"
+ *     responses:
+ *       200:
+ *         description: List of subscriptions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       student_id:
+ *                         type: string
+ *                         format: uuid
+ *                       package_name:
+ *                         type: string
+ *                       total_sessions:
+ *                         type: integer
+ *                       used_sessions:
+ *                         type: integer
+ *                       remaining_sessions:
+ *                         type: integer
+ *                       start_date:
+ *                         type: string
+ *                         format: date
+ *                       end_date:
+ *                         type: string
+ *                         format: date
+ *                       student:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           name:
+ *                             type: string
+ *                           current_grade:
+ *                             type: string
+ *                           parent:
+ *                             $ref: '#/components/schemas/Parent'
+ *       403:
+ *         description: Forbidden - Insufficient permissions
  *   post:
  *     summary: Create a new subscription package for a student
  *     tags: [Subscriptions]
@@ -77,6 +148,11 @@ const subscriptionUpdateValidation = [
  *       404:
  *         description: Student not found
  */
+const subscriptionListValidation = [
+  query('student_id').optional().isUUID().withMessage('Student ID must be a valid UUID')
+];
+
+router.get('/', optionalAuthenticate, subscriptionListValidation, subscriptionController.getAllSubscriptions);
 router.post('/', subscriptionValidation, subscriptionController.createSubscription);
 
 /**

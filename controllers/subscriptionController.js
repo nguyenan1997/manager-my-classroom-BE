@@ -1,5 +1,6 @@
-const { Subscription, Student } = require('../models');
+const { Subscription, Student, Parent } = require('../models');
 const { validationResult } = require('express-validator');
+const { Op } = require('sequelize');
 
 // Create new subscription
 const createSubscription = async (req, res) => {
@@ -88,6 +89,136 @@ const useSession = async (req, res) => {
     });
   } catch (error) {
     console.error('Use session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// Get all subscriptions (with permission check)
+const getAllSubscriptions = async (req, res) => {
+  try {
+    const { student_id } = req.query;
+    const { role, id: userId, parentId } = req.user || {};
+
+    // Build where condition
+    const whereCondition = {};
+    
+    // Filter by student_id if provided
+    if (student_id) {
+      whereCondition.student_id = student_id;
+    }
+
+    // Permission check: parent can only see subscriptions for their own children
+    if (role === 'parent') {
+      // Get all students of this parent
+      const students = await Student.findAll({
+        where: { parent_id: parentId },
+        attributes: ['id']
+      });
+      
+      const studentIds = students.map(s => s.id);
+      
+      if (studentIds.length === 0) {
+        return res.json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+
+      // If student_id is provided, verify it belongs to parent
+      if (student_id && !studentIds.includes(student_id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view subscriptions for your own children.'
+        });
+      }
+
+      // Filter by parent's children
+      whereCondition.student_id = { [Op.in]: studentIds };
+    } else if (role === 'staff') {
+      // Staff can only see subscriptions for students whose parents they manage
+      const parentsManaged = await Parent.findAll({
+        where: { created_by: userId },
+        attributes: ['id']
+      });
+
+      const parentIds = parentsManaged.map(p => p.id);
+      
+      if (parentIds.length === 0) {
+        return res.json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+
+      const students = await Student.findAll({
+        where: { parent_id: { [Op.in]: parentIds } },
+        attributes: ['id']
+      });
+
+      const studentIds = students.map(s => s.id);
+
+      if (studentIds.length === 0) {
+        return res.json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+
+      // If student_id is provided, verify it belongs to managed parents
+      if (student_id && !studentIds.includes(student_id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view subscriptions for students whose parents you manage.'
+        });
+      }
+
+      whereCondition.student_id = { [Op.in]: studentIds };
+    }
+    // Admin sees all, so no additional filtering
+
+    const subscriptions = await Subscription.findAll({
+      where: whereCondition,
+      include: [{
+        model: Student,
+        attributes: ['id', 'name', 'current_grade'],
+        include: [{
+          model: Parent,
+          attributes: ['id', 'name', 'email']
+        }]
+      }],
+      order: [['created_at', 'DESC']]
+    });
+
+    const subscriptionsData = subscriptions.map(sub => {
+      const subData = sub.toJSON();
+      subData.remaining_sessions = sub.remaining_sessions;
+      
+      // Format student data
+      if (subData.Student) {
+        subData.student = {
+          ...subData.Student,
+          parent: subData.Student.Parent
+        };
+        delete subData.Student;
+      }
+      
+      return subData;
+    });
+
+    res.json({
+      success: true,
+      count: subscriptionsData.length,
+      data: subscriptionsData
+    });
+  } catch (error) {
+    console.error('Get all subscriptions error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -245,6 +376,7 @@ const deleteSubscription = async (req, res) => {
 module.exports = {
   createSubscription,
   useSession,
+  getAllSubscriptions,
   getSubscriptionById,
   updateSubscription,
   deleteSubscription
